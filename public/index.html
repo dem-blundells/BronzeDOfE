@@ -105,10 +105,10 @@
     .tab.active { color: var(--green); border-bottom-color: var(--green); }
     .tab:hover:not(.active) { color: var(--green-md); }
 
-    .day-panel { display: none; padding: 16px; }
+    .day-panel { display: none; padding: 16px 0 16px 0; }
     .day-panel.active { display: block; }
 
-    .panel-heading {
+    .panel-heading { padding: 0 16px;
       font-size: 0.78rem;
       font-weight: 600;
       color: var(--green);
@@ -120,11 +120,9 @@
     /* Table */
     .progress-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
       font-size: 0.8rem;
       min-width: 700px;
     }
@@ -642,6 +640,7 @@
           onclick="handleCellClick(event, this)"
           oncontextmenu="handleRightClick(event, this)"
           ontouchstart="handleTouchStart(event, this)"
+          ontouchmove="handleTouchMove(event)"
           ontouchend="handleTouchEnd(event)"
         >
           <div class="note-dot"></div>
@@ -681,7 +680,10 @@
     longPressTimer = setTimeout(() => {
       openNoteModal(cell);
       longPressTimer = null;
-    }, 600);
+    }, 1200);
+  }
+  function handleTouchMove(e) {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
   }
   function handleTouchEnd(e) {
     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
