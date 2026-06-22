@@ -640,7 +640,6 @@
           onclick="handleCellClick(event, this)"
           oncontextmenu="handleRightClick(event, this)"
           ontouchstart="handleTouchStart(event, this)"
-          ontouchmove="handleTouchMove(event)"
           ontouchend="handleTouchEnd(event)"
         >
           <div class="note-dot"></div>
@@ -708,10 +707,7 @@
     longPressTimer = setTimeout(() => {
       openNoteModal(cell);
       longPressTimer = null;
-    }, 600);
-  }
-  function handleTouchMove(e) {
-    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    }, 1200);
   }
   function handleTouchEnd(e) {
     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
