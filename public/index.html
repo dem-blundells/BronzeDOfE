@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DofE Bronze – Team Progress</title>
+  <style>
+    :root {
+      --green:    #2d6a2d;
+      --green-lt: #e8f2e8;
+      --green-md: #4a8f4a;
+      --amber:    #c97a00;
+      --amber-lt: #fff4df;
+      --red:      #b33a3a;
+      --slate:    #2c3e35;
+      --slate-lt: #f3f6f4;
+      --border:   #c5d5c8;
+      --tick:     #2d6a2d;
+      --font:     'Segoe UI', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--slate-lt);
+      color: var(--slate);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--green);
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    header .sub {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .sync-badge {
+      font-size: 0.72rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+    .sync-badge.ok   { background: rgba(100,220,100,0.25); }
+    .sync-badge.busy { background: rgba(255,200,60,0.3); }
+    .sync-badge.err  { background: rgba(255,80,80,0.3); }
+
+    .staff-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+    }
+    .staff-bar label { font-weight: 600; color: var(--green); white-space: nowrap; }
+    .staff-bar input {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.82rem;
+      width: 180px;
+      font-family: var(--font);
+    }
+    .staff-bar input:focus { outline: 2px solid var(--green-md); border-color: transparent; }
+
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid var(--border);
+      padding: 0 16px;
+    }
+    .tab {
+      padding: 10px 22px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: #666;
+      transition: color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab:hover:not(.active) { color: var(--green-md); }
+
+    .day-panel { display: none; padding: 16px; overflow-x: auto; }
+    .day-panel.active { display: block; }
+
+    .panel-heading {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    /* Table */
+    .progress-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      font-size: 0.8rem;
+      min-width: 700px;
+    }
+    .progress-table th {
+      background: var(--green);
+      color: white;
+      padding: 6px 4px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+    }
+    .progress-table th.team-col { text-align: left; padding-left: 10px; min-width: 90px; }
+    .progress-table td {
+      border: 1px solid var(--border);
+      padding: 0;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .progress-table td.team-cell {
+      padding: 6px 10px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: var(--slate-lt);
+      white-space: nowrap;
+      text-align: left;
+    }
+    .progress-table tr:hover td { background-color: #f0f7f0; }
+    .progress-table tr:hover td.team-cell { background-color: #e4f0e4; }
+
+    .cp-group-header {
+      background: var(--green-lt) !important;
+      color: var(--green) !important;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 4px !important;
+    }
+
+    .finish-col { background: var(--amber-lt) !important; color: var(--amber) !important; font-weight: 700; }
+
+    /* Checkpoint cell */
+    .cp-cell {
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.1s;
+    }
+    .cp-cell:hover { background: var(--green-lt); }
+    .cp-cell.checked { background: var(--green-lt); }
+    .cp-cell.finish-cell { width: 52px; }
+    .cp-cell.finish-cell.checked { background: var(--amber-lt); }
+
+    .tick {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 1px;
+    }
+    .cp-cell.checked .tick { display: flex; }
+    .tick-icon { font-size: 1rem; color: var(--tick); line-height: 1; }
+    .cp-cell.finish-cell.checked .tick-icon { color: var(--amber); }
+    .tick-time { font-size: 0.58rem; color: #555; line-height: 1; }
+
+    /* Note modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 10px;
+      padding: 22px 24px;
+      width: 340px;
+      max-width: 95vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .modal h3 { font-size: 0.95rem; color: var(--green); margin-bottom: 14px; }
+    .modal label { font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px; }
+    .modal textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.82rem;
+      font-family: var(--font);
+      resize: vertical;
+      min-height: 80px;
+    }
+    .modal textarea:focus { outline: 2px solid var(--green-md); border-color: transparent; }
+    .modal-info { font-size: 0.75rem; color: #777; margin-bottom: 10px; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+    .btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: var(--font);
+    }
+    .btn-primary { background: var(--green); color: white; }
+    .btn-primary:hover { background: var(--green-md); }
+    .btn-ghost { background: var(--slate-lt); color: var(--slate); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #e0e8e2; }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-danger:hover { opacity: 0.88; }
+
+    /* Note indicator dot */
+    .note-dot {
+      display: none;
+      position: absolute;
+      top: 3px; right: 3px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+    .has-note .note-dot { display: block; }
+
+    /* Footer toolbar */
+    .toolbar {
+      background: white;
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #777;
+      flex-wrap: wrap;
+      gap: 8px;
+      position: sticky;
+      bottom: 0;
+    }
+    .toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 8px 16px;
+      font-size: 0.73rem;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* Start time cell */
+    .start-cell {
+      min-width: 80px;
+      padding: 3px 5px !important;
+      background: #f9fafb;
+    }
+    .start-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 4px;
+      font-size: 0.75rem;
+      font-family: var(--font);
+      text-align: center;
+      background: white;
+      color: var(--slate);
+    }
+    .start-input:focus { outline: 2px solid var(--green-md); border-color: transparent; }
+    .start-input.saved { background: var(--green-lt); border-color: var(--green); font-weight: 600; }
+
+    .loading-msg {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1rem; }
+      .tab { padding: 10px 14px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🥾 DofE Bronze – Team Progress</h1>
+    <div class="sub">Training Walk · Live Synchronisation</div>
+  </div>
+  <div class="header-right">
+    <span class="sync-badge" id="syncBadge">Connecting…</span>
+  </div>
+</header>
+
+<div class="staff-bar">
+  <label for="staffName">Your name:</label>
+  <input type="text" id="staffName" placeholder="e.g. Mr Smith" maxlength="40" />
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-lt);border-color:var(--green)"></div> Checkpoint reached</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-lt);border-color:var(--amber)"></div> Finish reached</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:white;"></div> Not yet reached</div>
+  <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></div>&nbsp;Note added</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-lt);border-color:var(--green);"></div> Start time recorded</div>
+  <div class="legend-item" style="color:#888;">Right-click or long-press a checkpoint to add a note</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-day="day1">Day 1</div>
+  <div class="tab" data-day="day2">Day 2</div>
+</div>
+
+<!-- Day 1 -->
+<div class="day-panel active" id="panel-day1">
+  <div class="panel-heading">Day 1 – Checkpoints 1 → 15, then reverse 7 → 1, then Finish</div>
+  <div id="table-day1" class="loading-msg">Loading progress data…</div>
+</div>
+
+<!-- Day 2 -->
+<div class="day-panel" id="panel-day2">
+  <div class="panel-heading">Day 2 – Checkpoints 1 → 15, then Finish</div>
+  <div id="table-day2" class="loading-msg">Loading progress data…</div>
+</div>
+
+<div class="toolbar">
+  <span id="lastUpdated">Not yet synced</span>
+  <div class="toolbar-right">
+    <button class="btn btn-ghost" id="refreshBtn">↻ Refresh</button>
+    <button class="btn btn-danger" id="resetBtn">Reset All</button>
+  </div>
+</div>
+
+<!-- Note modal -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add Note</h3>
+    <div class="modal-info" id="modalInfo"></div>
+    <label for="noteText">Note</label>
+    <textarea id="noteText" placeholder="e.g. Team arrived safely, one member with blister"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalSave">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Configuration ─────────────────────────────────────────────────────────
+  const TEAMS = ['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8','Team 9','Team 10'];
+
+  const DAY1_CHECKPOINTS = [
+    { id:'cp1',  label:'1',  group:'outbound' },
+    { id:'cp2',  label:'2',  group:'outbound' },
+    { id:'cp3',  label:'3',  group:'outbound' },
+    { id:'cp4',  label:'4',  group:'outbound' },
+    { id:'cp5',  label:'5',  group:'outbound' },
+    { id:'cp6',  label:'6',  group:'outbound' },
+    { id:'cp7',  label:'7',  group:'outbound' },
+    { id:'cp8',  label:'8',  group:'outbound' },
+    { id:'cp9',  label:'9',  group:'outbound' },
+    { id:'cp10', label:'10', group:'outbound' },
+    { id:'cp11', label:'11', group:'outbound' },
+    { id:'cp12', label:'12', group:'outbound' },
+    { id:'cp13', label:'13', group:'outbound' },
+    { id:'cp14', label:'14', group:'outbound' },
+    { id:'cp15', label:'15', group:'outbound' },
+    { id:'cr7',  label:'7',  group:'return'   },
+    { id:'cr6',  label:'6',  group:'return'   },
+    { id:'cr5',  label:'5',  group:'return'   },
+    { id:'cr4',  label:'4',  group:'return'   },
+    { id:'cr3',  label:'3',  group:'return'   },
+    { id:'cr2',  label:'2',  group:'return'   },
+    { id:'cr1',  label:'1',  group:'return'   },
+    { id:'finish', label:'Finish', group:'finish' },
+  ];
+
+  const DAY2_CHECKPOINTS = [
+    ...Array.from({length:15},(_,i)=>({ id:`d2cp${i+1}`, label:`${i+1}`, group:'outbound' })),
+    { id:'d2finish', label:'Finish', group:'finish' },
+  ];
+
+  const POLL_INTERVAL = 15000; // 15 seconds
+  let state = { teams: {}, lastUpdated: null, lastUpdatedBy: null };
+  let pollTimer = null;
+
+  // ── Utility ───────────────────────────────────────────────────────────────
+  function staffName() {
+    return document.getElementById('staffName').value.trim() || 'Unknown';
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function setSyncBadge(status, text) {
+    const b = document.getElementById('syncBadge');
+    b.className = 'sync-badge ' + status;
+    b.textContent = text;
+  }
+
+  // ── Fetch / Save ──────────────────────────────────────────────────────────
+  async function fetchProgress() {
+    setSyncBadge('busy', '⟳ Syncing…');
+    try {
+      const res = await fetch('/api/get-progress');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      state = await res.json();
+      renderAll();
+      const lu = state.lastUpdated
+        ? `Last updated ${fmtTime(state.lastUpdated)} by ${state.lastUpdatedBy || '?'}`
+        : 'No updates yet';
+      document.getElementById('lastUpdated').textContent = lu;
+      setSyncBadge('ok', '✓ Synced');
+    } catch(e) {
+      setSyncBadge('err', '⚠ Sync error');
+    }
+  }
+
+  async function updateCheckpoint(team, day, checkpoint, checked) {
+    const ts = new Date().toISOString();
+    try {
+      const res = await fetch('/api/update-checkpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team, day, checkpoint, checked, timestamp: ts, staffName: staffName() })
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      state = data.data;
+      renderAll();
+      setSyncBadge('ok', '✓ Saved');
+    } catch(e) {
+      setSyncBadge('err', '⚠ Save error');
+    }
+  }
+
+  async function saveNote(team, day, checkpoint, note) {
+    try {
+      await fetch('/api/update-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team, day, checkpoint, note, staffName: staffName() })
+      });
+      await fetchProgress();
+    } catch(e) {
+      setSyncBadge('err', '⚠ Note save error');
+    }
+  }
+
+  async function saveStartTime(team, day, startTime) {
+    setSyncBadge('busy', '⟳ Saving…');
+    try {
+      const res = await fetch('/api/update-start-time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team, day, startTime, staffName: staffName() })
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      state = data.data;
+      renderAll();
+      setSyncBadge('ok', '✓ Saved');
+    } catch(e) {
+      setSyncBadge('err', '⚠ Save error');
+    }
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────────────
+  function buildTable(containerId, day, checkpoints) {
+    const container = document.getElementById(containerId);
+
+    const outbound = checkpoints.filter(c => c.group === 'outbound');
+    const ret      = checkpoints.filter(c => c.group === 'return');
+    const finish   = checkpoints.filter(c => c.group === 'finish');
+
+    let html = `<table class="progress-table"><thead>`;
+
+    // Group row
+    html += `<tr><th class="team-col" rowspan="2">Team</th>`;
+    html += `<th class="cp-group-header" rowspan="2" style="min-width:80px;">Start Time</th>`;
+    html += `<th class="cp-group-header" colspan="${outbound.length}">Outbound</th>`;
+    if (ret.length) html += `<th class="cp-group-header" colspan="${ret.length}">Return</th>`;
+    html += `<th class="cp-group-header finish-col" colspan="${finish.length}">End</th>`;
+    html += `</tr>`;
+
+    // Number row
+    html += `<tr>`;
+    checkpoints.forEach(cp => {
+      const cls = cp.group === 'finish' ? 'finish-col' : '';
+      html += `<th class="${cls}">${cp.label}</th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    // Team rows
+    TEAMS.forEach(team => {
+      const teamData    = (state.teams && state.teams[team] && state.teams[team][day]) || {};
+      const startTime   = (state.teams && state.teams[team] && state.teams[team][`${day}_startTime`]) || '';
+      const inputSaved  = startTime ? 'saved' : '';
+
+      html += `<tr><td class="team-cell">${team}</td>`;
+
+      // Start time cell
+      html += `<td class="start-cell">
+        <input
+          type="time"
+          class="start-input ${inputSaved}"
+          value="${startTime}"
+          data-team="${team}"
+          data-day="${day}"
+          onchange="handleStartTimeChange(event)"
+        />
+      </td>`;
+
+      checkpoints.forEach(cp => {
+        const cpData   = teamData[cp.id];
+        const checked  = cpData && cpData.checked;
+        const note     = cpData && cpData.note;
+        const ts       = cpData && cpData.timestamp ? fmtTime(cpData.timestamp) : '';
+        const isFinish = cp.group === 'finish';
+        const cellClass = [
+          'cp-cell',
+          isFinish ? 'finish-cell' : '',
+          checked  ? 'checked'     : '',
+          note     ? 'has-note'    : '',
+        ].filter(Boolean).join(' ');
+
+        html += `<td class="${cellClass}"
+          data-team="${team}"
+          data-day="${day}"
+          data-cp="${cp.id}"
+          data-checked="${checked ? '1' : '0'}"
+          title="${note ? '📝 ' + note : ''}"
+          onclick="handleCellClick(event, this)"
+          oncontextmenu="handleRightClick(event, this)"
+          ontouchstart="handleTouchStart(event, this)"
+          ontouchend="handleTouchEnd(event)"
+        >
+          <div class="note-dot"></div>
+          <div class="tick">
+            <span class="tick-icon">✓</span>
+            ${ts ? `<span class="tick-time">${ts}</span>` : ''}
+          </div>
+        </td>`;
+      });
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  function renderAll() {
+    buildTable('table-day1', 'day1', DAY1_CHECKPOINTS);
+    buildTable('table-day2', 'day2', DAY2_CHECKPOINTS);
+  }
+
+  // ── Cell interaction ──────────────────────────────────────────────────────
+  function handleCellClick(e, cell) {
+    e.preventDefault();
+    const { team, day, cp } = cell.dataset;
+    const checked = cell.dataset.checked === '1';
+    updateCheckpoint(team, day, cp, !checked);
+  }
+
+  function handleRightClick(e, cell) {
+    e.preventDefault();
+    openNoteModal(cell);
+  }
+
+  let longPressTimer = null;
+  function handleTouchStart(e, cell) {
+    longPressTimer = setTimeout(() => {
+      openNoteModal(cell);
+      longPressTimer = null;
+    }, 600);
+  }
+  function handleTouchEnd(e) {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+  }
+
+  function handleStartTimeChange(e) {
+    const input = e.target;
+    const { team, day } = input.dataset;
+    const val = input.value;
+    if (val) saveStartTime(team, day, val);
+  }
+
+  // ── Note modal ────────────────────────────────────────────────────────────
+  let modalContext = null;
+
+  function openNoteModal(cell) {
+    const { team, day, cp } = cell.dataset;
+    const cpData = (state.teams[team] && state.teams[team][day] && state.teams[team][day][cp]) || {};
+    modalContext = { team, day, cp };
+
+    const dayLabel = day === 'day1' ? 'Day 1' : 'Day 2';
+    document.getElementById('modalTitle').textContent = `Note – ${team}`;
+    document.getElementById('modalInfo').textContent  = `${dayLabel} · Checkpoint ${cp}`;
+    document.getElementById('noteText').value = cpData.note || '';
+    document.getElementById('noteModal').classList.add('open');
+    document.getElementById('noteText').focus();
+  }
+
+  document.getElementById('modalCancel').addEventListener('click', () => {
+    document.getElementById('noteModal').classList.remove('open');
+    modalContext = null;
+  });
+
+  document.getElementById('modalSave').addEventListener('click', async () => {
+    if (!modalContext) return;
+    const note = document.getElementById('noteText').value.trim();
+    document.getElementById('noteModal').classList.remove('open');
+    await saveNote(modalContext.team, modalContext.day, modalContext.cp, note);
+    modalContext = null;
+  });
+
+  document.getElementById('noteModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('noteModal')) {
+      document.getElementById('noteModal').classList.remove('open');
+      modalContext = null;
+    }
+  });
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.day).classList.add('active');
+    });
+  });
+
+  // ── Toolbar ───────────────────────────────────────────────────────────────
+  document.getElementById('refreshBtn').addEventListener('click', fetchProgress);
+
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    if (!confirm('Reset ALL progress for all teams and both days? This cannot be undone.')) return;
+    try {
+      await fetch('/api/reset', { method: 'POST' });
+      await fetchProgress();
+    } catch(e) {
+      setSyncBadge('err', '⚠ Reset error');
+    }
+  });
+
+  // ── Staff name persistence ────────────────────────────────────────────────
+  const savedName = localStorage.getItem('dofe_staff_name');
+  if (savedName) document.getElementById('staffName').value = savedName;
+  document.getElementById('staffName').addEventListener('input', e => {
+    localStorage.setItem('dofe_staff_name', e.target.value);
+  });
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  fetchProgress();
+  pollTimer = setInterval(fetchProgress, POLL_INTERVAL);
+</script>
+</body>
+</html>
