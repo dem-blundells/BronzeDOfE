@@ -105,7 +105,7 @@
     .tab.active { color: var(--green); border-bottom-color: var(--green); }
     .tab:hover:not(.active) { color: var(--green-md); }
 
-    .day-panel { display: none; padding: 16px; overflow-x: auto; }
+    .day-panel { display: none; padding: 16px; }
     .day-panel.active { display: block; }
 
     .panel-heading {
@@ -323,9 +323,60 @@
       font-size: 0.85rem;
     }
 
+    /* Scrollable table wrapper */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    /* Sticky team column */
+    .progress-table th.team-col,
+    .progress-table td.team-cell {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+    }
+    .progress-table th.team-col {
+      background: var(--green);
+      z-index: 3;
+    }
+    .progress-table td.team-cell {
+      background: var(--slate-lt);
+      box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+    }
+    .progress-table tr:hover td.team-cell {
+      background: #e4f0e4;
+    }
+
+    /* Remove border-radius from table itself now wrapper handles it */
+    .progress-table {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
     @media (max-width: 600px) {
-      header h1 { font-size: 1rem; }
-      .tab { padding: 10px 14px; font-size: 0.8rem; }
+      header h1 { font-size: 0.95rem; }
+      header .sub { font-size: 0.7rem; }
+      .tab { padding: 10px 12px; font-size: 0.78rem; }
+      .staff-bar { font-size: 0.78rem; }
+      .staff-bar input { width: 150px; }
+      .legend { font-size: 0.68rem; gap: 8px; padding: 6px 12px; }
+      .day-panel { padding: 10px; }
+      .panel-heading { font-size: 0.72rem; margin-bottom: 8px; }
+      .cp-cell { width: 32px; height: 34px; }
+      .tick-icon { font-size: 0.9rem; }
+      .tick-time { font-size: 0.52rem; }
+      .progress-table th { font-size: 0.65rem; padding: 5px 3px; }
+      .progress-table th.team-col { min-width: 70px; padding-left: 8px; }
+      .progress-table td.team-cell { font-size: 0.72rem; padding: 5px 8px; }
+      .start-cell { width: 50px; }
+      .start-cell .start-label { font-size: 0.55rem; }
+      .start-cell .start-time-label { font-size: 0.5rem; }
+      .toolbar { font-size: 0.7rem; padding: 8px 12px; }
+      .btn { font-size: 0.72rem; padding: 6px 12px; }
+      .sync-badge { font-size: 0.65rem; }
     }
   </style>
 </head>
@@ -525,7 +576,7 @@
     const ret      = checkpoints.filter(c => c.group === 'return');
     const finish   = checkpoints.filter(c => c.group === 'finish');
 
-    let html = `<table class="progress-table"><thead>`;
+    let html = `<div class="table-scroll"><table class="progress-table"><thead>`;
 
     // Group row
     html += `<tr><th class="team-col" rowspan="2">Team</th>`;
@@ -603,7 +654,7 @@
       html += `</tr>`;
     });
 
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
     container.innerHTML = html;
   }
 
