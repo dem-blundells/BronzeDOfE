@@ -188,6 +188,10 @@
       gap: 1px;
     }
     .cp-cell.checked .tick { display: flex; }
+    .key-cp-header { background-color: #3d7d3d !important; }
+    .cp-cell.key-cp { background-color: #eef6ee; }
+    .cp-cell.key-cp:hover { background-color: #dff0df; }
+    .cp-cell.key-cp.checked { background-color: #d4edda; }
     .tick-icon { font-size: 1rem; color: var(--tick); line-height: 1; }
     .cp-cell.finish-cell.checked .tick-icon { color: var(--amber); }
     .tick-time { font-size: 0.58rem; color: #555; line-height: 1; }
@@ -395,28 +399,28 @@
   const TEAMS = ['Team 1','Team 2','Team 3','Team 4','Team 5','Team 6','Team 7','Team 8','Team 9','Team 10'];
 
   const DAY1_CHECKPOINTS = [
-    { id:'cp1',  label:'1',  group:'outbound' },
-    { id:'cp2',  label:'2',  group:'outbound' },
-    { id:'cp3',  label:'3',  group:'outbound' },
-    { id:'cp4',  label:'4',  group:'outbound' },
-    { id:'cp5',  label:'5',  group:'outbound' },
-    { id:'cp6',  label:'6',  group:'outbound' },
-    { id:'cp7',  label:'7',  group:'outbound' },
-    { id:'cp8',  label:'8',  group:'outbound' },
-    { id:'cp9',  label:'9',  group:'outbound' },
-    { id:'cp10', label:'10', group:'outbound' },
-    { id:'cp11', label:'11', group:'outbound' },
-    { id:'cp12', label:'12', group:'outbound' },
-    { id:'cp13', label:'13', group:'outbound' },
-    { id:'cp14', label:'14', group:'outbound' },
-    { id:'cp15', label:'15', group:'outbound' },
-    { id:'cr7',  label:'7',  group:'return'   },
-    { id:'cr6',  label:'6',  group:'return'   },
-    { id:'cr5',  label:'5',  group:'return'   },
-    { id:'cr4',  label:'4',  group:'return'   },
-    { id:'cr3',  label:'3',  group:'return'   },
-    { id:'cr2',  label:'2',  group:'return'   },
-    { id:'cr1',  label:'1',  group:'return'   },
+    { id:'cp1',  label:'1',  group:'outbound', key:true  },
+    { id:'cp2',  label:'2',  group:'outbound'            },
+    { id:'cp3',  label:'3',  group:'outbound'            },
+    { id:'cp4',  label:'4',  group:'outbound'            },
+    { id:'cp5',  label:'5',  group:'outbound', key:true  },
+    { id:'cp6',  label:'6',  group:'outbound'            },
+    { id:'cp7',  label:'7',  group:'outbound', key:true  },
+    { id:'cp8',  label:'8',  group:'outbound'            },
+    { id:'cp9',  label:'9',  group:'outbound'            },
+    { id:'cp10', label:'10', group:'outbound'            },
+    { id:'cp11', label:'11', group:'outbound', key:true  },
+    { id:'cp12', label:'12', group:'outbound'            },
+    { id:'cp13', label:'13', group:'outbound'            },
+    { id:'cp14', label:'14', group:'outbound', key:true  },
+    { id:'cp15', label:'15', group:'outbound'            },
+    { id:'cr7',  label:'7',  group:'return',   key:true  },
+    { id:'cr6',  label:'6',  group:'return'              },
+    { id:'cr5',  label:'5',  group:'return',   key:true  },
+    { id:'cr4',  label:'4',  group:'return'              },
+    { id:'cr3',  label:'3',  group:'return'              },
+    { id:'cr2',  label:'2',  group:'return'              },
+    { id:'cr1',  label:'1',  group:'return',   key:true  },
     { id:'finish', label:'Finish', group:'finish' },
   ];
 
@@ -534,7 +538,10 @@
     // Number row
     html += `<tr>`;
     checkpoints.forEach(cp => {
-      const cls = cp.group === 'finish' ? 'finish-col' : '';
+      const cls = [
+        cp.group === 'finish' ? 'finish-col' : '',
+        cp.key ? 'key-cp-header' : '',
+      ].filter(Boolean).join(' ');
       html += `<th class="${cls}">${cp.label}</th>`;
     });
     html += `</tr></thead><tbody>`;
@@ -569,9 +576,10 @@
         const isFinish = cp.group === 'finish';
         const cellClass = [
           'cp-cell',
-          isFinish ? 'finish-cell' : '',
-          checked  ? 'checked'     : '',
-          note     ? 'has-note'    : '',
+          isFinish  ? 'finish-cell' : '',
+          cp.key    ? 'key-cp'      : '',
+          checked   ? 'checked'     : '',
+          note      ? 'has-note'    : '',
         ].filter(Boolean).join(' ');
 
         html += `<td class="${cellClass}"
