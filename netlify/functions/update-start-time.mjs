@@ -8,7 +8,7 @@ export default async (req, context) => {
   const body = await req.json();
   const { team, day, startTime, staffName } = body;
 
-  if (!team || !day || !startTime) {
+  if (!team || !day || startTime === undefined) {
     return new Response("Missing required fields", { status: 400 });
   }
 
@@ -16,7 +16,11 @@ export default async (req, context) => {
   const existing = (await store.get("teams", { type: "json" })) || { teams: {} };
 
   if (!existing.teams[team]) existing.teams[team] = { day1: {}, day2: {} };
-  existing.teams[team][`${day}_startTime`] = startTime;
+  if (startTime === '') {
+    delete existing.teams[team][`${day}_startTime`];
+  } else {
+    existing.teams[team][`${day}_startTime`] = startTime;
+  }
 
   existing.lastUpdated = new Date().toISOString();
   existing.lastUpdatedBy = staffName || "Unknown";

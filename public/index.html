@@ -287,25 +287,31 @@
       border: 1px solid var(--border);
     }
 
-    /* Start time cell */
+    /* Started cell */
     .start-cell {
-      min-width: 80px;
-      padding: 3px 5px !important;
-      background: #f9fafb;
-    }
-    .start-input {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 3px 4px;
-      font-size: 0.75rem;
-      font-family: var(--font);
+      width: 60px;
+      height: 38px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.1s;
       text-align: center;
-      background: white;
-      color: var(--slate);
+      vertical-align: middle;
     }
-    .start-input:focus { outline: 2px solid var(--green-md); border-color: transparent; }
-    .start-input.saved { background: var(--green-lt); border-color: var(--green); font-weight: 600; }
+    .start-cell:hover { background: var(--green-lt); }
+    .start-cell.started { background: var(--green-lt); }
+    .start-cell .start-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 38px;
+      gap: 1px;
+    }
+    .start-cell .start-tick { font-size: 1rem; line-height: 1; display: none; color: var(--green); }
+    .start-cell.started .start-tick { display: block; }
+    .start-cell .start-label { font-size: 0.62rem; color: #aaa; line-height: 1; }
+    .start-cell.started .start-label { color: var(--green); font-weight: 700; }
+    .start-cell .start-time-label { font-size: 0.58rem; color: #555; line-height: 1; }
 
     .loading-msg {
       text-align: center;
@@ -542,16 +548,18 @@
 
       html += `<tr><td class="team-cell">${team}</td>`;
 
-      // Start time cell
-      html += `<td class="start-cell">
-        <input
-          type="time"
-          class="start-input ${inputSaved}"
-          value="${startTime}"
-          data-team="${team}"
-          data-day="${day}"
-          onchange="handleStartTimeChange(event)"
-        />
+      // Started cell
+      const isStarted = !!startTime;
+      html += `<td class="start-cell ${isStarted ? 'started' : ''}"
+        data-team="${team}"
+        data-day="${day}"
+        onclick="handleStartedClick(event, this)"
+      >
+        <div class="start-inner">
+          <span class="start-tick">✓</span>
+          <span class="start-label">Started</span>
+          ${isStarted ? `<span class="start-time-label">${fmtTime(startTime)}</span>` : ''}
+        </div>
       </td>`;
 
       checkpoints.forEach(cp => {
@@ -621,11 +629,16 @@
     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
   }
 
-  function handleStartTimeChange(e) {
-    const input = e.target;
-    const { team, day } = input.dataset;
-    const val = input.value;
-    if (val) saveStartTime(team, day, val);
+  function handleStartedClick(e, cell) {
+    e.preventDefault();
+    const { team, day } = cell.dataset;
+    const isStarted = cell.classList.contains('started');
+    if (isStarted) {
+      if (!confirm(`Mark ${team} as NOT started on ${day === 'day1' ? 'Day 1' : 'Day 2'}?`)) return;
+      saveStartTime(team, day, '');
+    } else {
+      saveStartTime(team, day, new Date().toISOString());
+    }
   }
 
   // ── Note modal ────────────────────────────────────────────────────────────
