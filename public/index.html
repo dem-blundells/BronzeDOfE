@@ -354,6 +354,11 @@
       box-shadow: none;
     }
 
+    .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .btn-block { width: 100%; text-align: center; padding: 12px; font-size: 0.88rem; }
+    .btn-note { background: var(--amber-lt); color: var(--amber); border: 1px solid var(--amber); }
+    .btn-note:hover { background: #ffe8b0; }
+
     @media (max-width: 600px) {
       header h1 { font-size: 0.95rem; }
       header .sub { font-size: 0.7rem; }
@@ -401,7 +406,7 @@
   <div class="legend-item"><div class="legend-swatch" style="background:white;"></div> Not yet reached</div>
   <div class="legend-item"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></div>&nbsp;Note added</div>
   <div class="legend-item"><div class="legend-swatch" style="background:var(--green-lt);border-color:var(--green);"></div> Start time recorded</div>
-  <div class="legend-item" style="color:#888;">Right-click or long-press a checkpoint to add a note</div>
+  <div class="legend-item" style="color:#888;">Tap any checkpoint to mark passed or add a note</div>
 </div>
 
 <div class="tabs">
@@ -426,6 +431,19 @@
   <div class="toolbar-right">
     <button class="btn btn-ghost" id="refreshBtn">↻ Refresh</button>
     <button class="btn btn-danger" id="resetBtn">Reset All</button>
+  </div>
+</div>
+
+<!-- Action modal -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <h3 id="actionTitle">Checkpoint</h3>
+    <div class="modal-info" id="actionInfo"></div>
+    <div class="action-buttons">
+      <button class="btn btn-primary btn-block" id="actionToggle"></button>
+      <button class="btn btn-note btn-block" id="actionNote">📝 Add / Edit Note</button>
+      <button class="btn btn-ghost btn-block" id="actionCancel">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -638,9 +656,6 @@
           data-checked="${checked ? '1' : '0'}"
           title="${note ? '📝 ' + note : ''}"
           onclick="handleCellClick(event, this)"
-          oncontextmenu="handleRightClick(event, this)"
-          ontouchstart="handleTouchStart(event, this)"
-          ontouchend="handleTouchEnd(event)"
         >
           <div class="note-dot"></div>
           <div class="tick">
@@ -690,28 +705,51 @@
   }
 
   // ── Cell interaction ──────────────────────────────────────────────────────
+  // ── Action modal ─────────────────────────────────────────────────────────
+  let actionContext = null;
+
   function handleCellClick(e, cell) {
     e.preventDefault();
     const { team, day, cp } = cell.dataset;
     const checked = cell.dataset.checked === '1';
+    const isFinish = cell.classList.contains('finish-cell');
+    const cpData = (state.teams[team] && state.teams[team][day] && state.teams[team][day][cp]) || {};
+    actionContext = { team, day, cp, checked, cell };
+
+    const dayLabel = day === 'day1' ? 'Day 1' : 'Day 2';
+    document.getElementById('actionTitle').textContent = `${team} · ${dayLabel} · CP ${cp}`;
+    document.getElementById('actionInfo').textContent = cpData.note ? `Note: ${cpData.note}` : '';
+    document.getElementById('actionToggle').textContent = checked ? '✗ Mark Not Passed' : '✓ Mark Passed';
+    document.getElementById('actionToggle').className = checked ? 'btn btn-danger btn-block' : 'btn btn-primary btn-block';
+    document.getElementById('actionModal').classList.add('open');
+  }
+
+  document.getElementById('actionToggle').addEventListener('click', () => {
+    if (!actionContext) return;
+    document.getElementById('actionModal').classList.remove('open');
+    const { team, day, cp, checked } = actionContext;
     updateCheckpoint(team, day, cp, !checked);
-  }
+    actionContext = null;
+  });
 
-  function handleRightClick(e, cell) {
-    e.preventDefault();
-    openNoteModal(cell);
-  }
+  document.getElementById('actionNote').addEventListener('click', () => {
+    if (!actionContext) return;
+    document.getElementById('actionModal').classList.remove('open');
+    openNoteModal(actionContext.cell);
+    actionContext = null;
+  });
 
-  let longPressTimer = null;
-  function handleTouchStart(e, cell) {
-    longPressTimer = setTimeout(() => {
-      openNoteModal(cell);
-      longPressTimer = null;
-    }, 1200);
-  }
-  function handleTouchEnd(e) {
-    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-  }
+  document.getElementById('actionCancel').addEventListener('click', () => {
+    document.getElementById('actionModal').classList.remove('open');
+    actionContext = null;
+  });
+
+  document.getElementById('actionModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('actionModal')) {
+      document.getElementById('actionModal').classList.remove('open');
+      actionContext = null;
+    }
+  });
 
   function handleStartedClick(e, cell) {
     e.preventDefault();
