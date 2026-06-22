@@ -657,9 +657,37 @@
     container.innerHTML = html;
   }
 
+  function saveScrollPositions() {
+    const scrolls = {};
+    ['panel-day1', 'panel-day2'].forEach(id => {
+      const panel = document.getElementById(id);
+      const wrapper = panel && panel.querySelector('.table-scroll');
+      scrolls[id] = {
+        wrapperLeft: wrapper ? wrapper.scrollLeft : 0,
+        wrapperTop:  wrapper ? wrapper.scrollTop  : 0,
+        windowY: window.scrollY,
+      };
+    });
+    return scrolls;
+  }
+
+  function restoreScrollPositions(scrolls) {
+    ['panel-day1', 'panel-day2'].forEach(id => {
+      const panel = document.getElementById(id);
+      const wrapper = panel && panel.querySelector('.table-scroll');
+      if (wrapper && scrolls[id]) {
+        wrapper.scrollLeft = scrolls[id].wrapperLeft;
+        wrapper.scrollTop  = scrolls[id].wrapperTop;
+      }
+    });
+    window.scrollTo(0, scrolls['panel-day1'] ? scrolls['panel-day1'].windowY : 0);
+  }
+
   function renderAll() {
+    const scrolls = saveScrollPositions();
     buildTable('table-day1', 'day1', DAY1_CHECKPOINTS);
     buildTable('table-day2', 'day2', DAY2_CHECKPOINTS);
+    restoreScrollPositions(scrolls);
   }
 
   // ── Cell interaction ──────────────────────────────────────────────────────
