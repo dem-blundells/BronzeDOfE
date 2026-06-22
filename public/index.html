@@ -708,7 +708,7 @@
     longPressTimer = setTimeout(() => {
       openNoteModal(cell);
       longPressTimer = null;
-    }, 1200);
+    }, 600);
   }
   function handleTouchMove(e) {
     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
