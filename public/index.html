@@ -492,13 +492,28 @@
   ];
 
   const DAY2_CHECKPOINTS = [
-    ...Array.from({length:15},(_,i)=>({ id:`d2cp${i+1}`, label:`${i+1}`, group:'outbound' })),
+    { id:'d2cp1',  label:'1',  group:'outbound'           },
+    { id:'d2cp2',  label:'2',  group:'outbound'           },
+    { id:'d2cp3',  label:'3',  group:'outbound'           },
+    { id:'d2cp4',  label:'4',  group:'outbound'           },
+    { id:'d2cp5',  label:'5',  group:'outbound'           },
+    { id:'d2cp6',  label:'6',  group:'outbound'           },
+    { id:'d2cp7',  label:'7',  group:'outbound', key:true },
+    { id:'d2cp8',  label:'8',  group:'outbound'           },
+    { id:'d2cp9',  label:'9',  group:'outbound'           },
+    { id:'d2cp10', label:'10', group:'outbound'           },
+    { id:'d2cp11', label:'11', group:'outbound', key:true },
+    { id:'d2cp12', label:'12', group:'outbound'           },
+    { id:'d2cp13', label:'13', group:'outbound'           },
+    { id:'d2cp14', label:'14', group:'outbound'           },
+    { id:'d2cp15', label:'15', group:'outbound'           },
     { id:'d2finish', label:'Finish', group:'finish' },
   ];
 
   const POLL_INTERVAL = 15000; // 15 seconds
   let state = { teams: {}, lastUpdated: null, lastUpdatedBy: null };
   let pollTimer = null;
+  let activeDay = 'day1';
 
   // ── Utility ───────────────────────────────────────────────────────────────
   function staffName() {
@@ -701,6 +716,13 @@
     const scrolls = saveScrollPositions();
     buildTable('table-day1', 'day1', DAY1_CHECKPOINTS);
     buildTable('table-day2', 'day2', DAY2_CHECKPOINTS);
+    // Restore active tab
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.day === activeDay);
+    });
+    document.querySelectorAll('.day-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'panel-' + activeDay);
+    });
     restoreScrollPositions(scrolls);
   }
 
@@ -805,7 +827,8 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
-      document.getElementById('panel-' + tab.dataset.day).classList.add('active');
+      activeDay = tab.dataset.day;
+      document.getElementById('panel-' + activeDay).classList.add('active');
     });
   });
 
